@@ -6,7 +6,7 @@ Welcome to my comprehensive portfolio documenting my journey through the **LangG
 
 ## 🚀 Technical Highlights & Tech Stack
 * **Framework:** LangGraph (StateGraph, Command Routing, Interrupts, InMemorySaver)
-* **LLM Providers:** Google Gemini (`gemini-2.5-flash`) & OpenAI (`gpt-4o-mini`)
+* **LLM Providers:** Google Gemini (`gemini-2.5-flash`) 
 * **Validation & State:** Pydantic (Structured JSON), TypedDict, Reducers (`Annotated`, `operator.add`)
 * **Environment:** Python 3.11+, `python-dotenv`, Virtual Environments (`venv`)
 
