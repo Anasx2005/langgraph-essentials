@@ -156,7 +156,6 @@ Create a new file named exactly `.env` in the root directory of the project, and
 
 ```text
 GOOGLE_API_KEY=AIzaSyYourActualGeminiStudioKeyHere
-OPENAI_API_KEY=sk-proj-YourActualOpenAIKeyHere
 
 ```
 
