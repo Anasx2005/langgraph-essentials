@@ -1,331 +1,92 @@
 # 🦜🔗 LangGraph Essentials Course - Portfolio
 
-Welcome to my comprehensive portfolio documenting my journey through the **LangGraph Essentials Course**.
-
-This repository contains production-ready Python implementations of all course labs, converted from the original Jupyter Notebooks into clean, modular Python scripts (`.py`). The implementations primarily use **Google Gemini** as the LLM provider while also demonstrating interoperability with **OpenAI** models through LangChain integrations.
-
-The goal of this repository is not only to complete the course exercises, but also to organize them into a production-style project that demonstrates real-world LangGraph concepts such as state management, routing, memory, human-in-the-loop workflows, and enterprise agent architectures.
+Welcome to my comprehensive portfolio documenting my journey through the **LangGraph Essentials Course**. This repository contains production-ready Python implementations of all course labs, converted from original Jupyter Notebooks into clean, modular Python scripts (`.py`), utilizing **Google Gemini** and **OpenAI** via LangChain.
 
 ---
 
-# 🚀 Technical Highlights & Tech Stack
-
-- **Framework:** LangGraph
-  - StateGraph
-  - Command Routing
-  - Interrupts
-  - START / END Nodes
-  - InMemorySaver
-- **LLM Providers**
-  - Google Gemini (`gemini-2.5-flash`)
-  - OpenAI (`gpt-4o-mini`)
-- **LangChain Integrations**
-  - LangChain Google GenAI
-  - LangChain OpenAI
-- **Data Validation**
-  - Pydantic
-  - Structured JSON Outputs
-- **State Management**
-  - TypedDict
-  - Reducers
-  - `Annotated`
-  - `operator.add`
-- **Environment**
-  - Python
-  - python-dotenv
-  - Virtual Environments (`venv`)
+## 🚀 Technical Highlights & Tech Stack
+* **Framework:** LangGraph (StateGraph, Command Routing, Interrupts, InMemorySaver)
+* **LLM Providers:** Google Gemini (`gemini-2.5-flash`) & OpenAI (`gpt-4o-mini`)
+* **Validation & State:** Pydantic (Structured JSON), TypedDict, Reducers (`Annotated`, `operator.add`)
+* **Environment:** Python 3.11+, `python-dotenv`, Virtual Environments (`venv`)
 
 ---
 
-# 📚 Course Curriculum
+## 📚 Course Curriculum
 
 | Lab | Topic | State Management | Flow Control | Memory |
-|------|--------|-----------------|--------------|--------|
+| :--- | :--- | :--- | :--- | :--- |
 | **Lab 01** | States & Nodes Foundations | Overwrite | Linear | ❌ |
-| **Lab 02** | Parallel Execution (Fan-out/Fan-in) | Append (`operator.add`) | Parallel | ❌ |
-| **Lab 03a** | Conditional Routing | Append | Conditional Edges | ❌ |
-| **Lab 03b** | Dynamic Routing using Command | Append | Command Routing | ❌ |
-| **Lab 04** | Chatbot Memory | Append | Dynamic Routing | ✅ InMemorySaver |
-| **Lab 05** | Human-In-The-Loop | Append | Interrupt & Resume | ✅ InMemorySaver |
+| **Lab 02** | Parallel Execution (Fan-out/In) | Append (`operator.add`) | Parallel | ❌ |
+| **Lab 03a**| Conditional Routing | Append | Conditional Edges | ❌ |
+| **Lab 03b**| Dynamic Routing via Command | Append | Command Routing | ❌ |
+| **Lab 04** | Chatbot Session Memory | Append | Dynamic Routing | ✅ InMemorySaver |
+| **Lab 05** | Human-In-The-Loop (HITL) | Append | Interrupt & Resume | ✅ InMemorySaver |
 | **Lab 06** | Enterprise Email Agent | Custom State | Multi-path + HITL | ✅ Multi-thread |
 
 ---
 
-# 🛠️ Lab Breakdown
+## 🛠️ Lab Breakdown & Architecture Visualizations
+
+### 📁 Lab 01 — States & Nodes Foundations
+* **Core Takeaway:** LangGraph applications revolve around a localized shared `TypedDict` state. Every node is a pure function that receives the state, performs computations, and returns only the mutated keys.
+* **State Behavior:** By default, returning an existing key completely **overwrites** the previous value.
+
+<p align="center">
+  <img src="output/graph_viz_lab01.png" alt="Lab 01 Architecture" width="250"/>
+</p>
 
 ---
 
-## 📁 Lab 01 — States & Nodes Foundations
+### 📁 Lab 02 — Parallel Execution & Reducers
+* **Core Takeaway:** Introduced **Reducers** via `Annotated[list[str], operator.add]` which forces the graph to *append* items to lists instead of overwriting them.
+* **Parallel Execution:** Enables Fan-Out/Fan-In architectures. LangGraph automatically blocks and awaits all concurrent parallel branches to finish before pushing data to downstream nodes.
 
-### Concepts
-
-- Understanding what a StateGraph is
-- Creating a TypedDict state
-- Writing graph nodes
-- Building a linear graph
-
-### Key Takeaways
-
-A LangGraph application revolves around a shared **state object**.
-
-Every node:
-
-- receives the current state
-- performs some computation
-- returns only the keys that changed
-
-Example execution:
-
-```
-START
-   ↓
- Node A
-   ↓
- END
-```
-
-By default, if a node returns an existing key, the previous value is **overwritten**.
+<p align="center">
+  <img src="output/graph_viz_lab02.png" alt="Lab 02 Architecture" width="400"/>
+</p>
 
 ---
 
-## 📁 Lab 02 — Parallel Execution & Reducers
+### 📁 Lab 03a — Conditional Routing
+* **Core Takeaway:** Implements routing logic using `add_conditional_edges()`. This pattern keeps business logic inside the nodes strictly separated from the routing governance functions.
 
-### Concepts
-
-- Parallel execution
-- Fan-Out / Fan-In
-- Reducers
-- operator.add
-
-Instead of overwriting values, reducers allow multiple nodes to safely contribute to the same state.
-
-Example:
-
-```python
-class State(TypedDict):
-    nlist: Annotated[list[str], operator.add]
-```
-
-Now every node appends instead of replacing.
-
-Architecture:
-
-```
-         START
-            |
-         Node A
-        /      \
-   Node B    Node C
-        \      /
-        Node D
-           |
-          END
-```
-
-LangGraph automatically waits until all parallel branches complete before moving to the next node.
+<p align="center">
+  <img src="output/graph_viz_lab03a.png" alt="Lab 03a Architecture" width="350"/>
+</p>
 
 ---
 
-## 📁 Lab 03a — Conditional Routing
+### 📁 Lab 03b — Dynamic Routing with Command
+* **Core Takeaway:** Combines state updates, business logic, and routing decisions into a single atomic operation inside the node itself by returning a `Command(update=..., goto=...)` object.
 
-### Concepts
-
-- add_conditional_edges()
-- External routing functions
-
-Routing decisions are separated from business logic.
-
-Example:
-
-```
-Node A
-   |
-Condition Function
-  /        \
- B          C
-```
+<p align="center">
+  <img src="output/graph_viz_lab03b.png" alt="Lab 03b Architecture" width="350"/>
+</p>
 
 ---
 
-## 📁 Lab 03b — Dynamic Routing with Command
+### 📁 Lab 04 & 05 — Memory & Human-In-The-Loop (HITL)
+* **Lab 04 (Memory):** Compiling graphs with `InMemorySaver()` checkpointers allows state persistence across distinct execution cycles matching a specific `thread_id`.
+* **Lab 05 (HITL):** Uses `interrupt()` to pause graph states securely, awaiting a human signal `Command(resume=...)` to resume processing from the exact injection point.
 
-Instead of defining routing outside the node, the node itself decides where execution goes.
-
-Example:
-
-```python
-def node_a(state: State) -> Command[Literal["b", "c", END]]:
-
-    selection = state["nlist"][-1]
-
-    if selection == "b":
-        next_node = "b"
-    elif selection == "c":
-        next_node = "c"
-    else:
-        next_node = END
-
-    return Command(
-        update={
-            "nlist": [selection]
-        },
-        goto=next_node
-    )
-```
-
-This combines
-
-- State updates
-- Routing
-- Business logic
-
-inside one atomic operation.
+<p align="center">
+  <img src="output/graph_viz_lab05.png" alt="Lab 05 Architecture" width="350"/>
+</p>
 
 ---
 
-## 📁 Lab 04 — Memory & Checkpointers
+### 📁 Lab 06 — Enterprise Email Agent (Capstone Project)
+* **Core Takeaway:** An end-to-end multi-path business agent. It takes raw emails, extracts structured data using Pydantic, triggers parallel context lookup tracks (Database lookup + Bug ticketing), drafts replies, and safely flags high-urgency or complex topics for human review before execution.
 
-Graphs normally forget everything after execution.
-
-Adding an `InMemorySaver()` changes that.
-
-```python
-memory = InMemorySaver()
-
-graph.compile(
-    checkpointer=memory
-)
-```
-
-Using
-
-```python
-config = {
-    "configurable": {
-        "thread_id": "user1"
-    }
-}
-```
-
-allows the graph to restore previous conversations.
-
-The same `thread_id` continues the previous session automatically.
+<p align="center">
+  <img src="output/graph_viz_lab06.png" alt="Lab 06 Architecture" width="550"/>
+</p>
 
 ---
 
-## 📁 Lab 05 — Human-In-The-Loop
-
-One of LangGraph's most powerful features.
-
-Execution intentionally pauses using:
-
-```python
-interrupt()
-```
-
-The graph:
-
-- Saves its current state
-- Stops execution
-- Waits for human approval
-
-Later it resumes with
-
-```python
-Command(
-    resume="Approved"
-)
-```
-
-without restarting the workflow.
-
-This enables production-safe AI systems.
-
----
-
-## 📁 Lab 06 — Enterprise Email Agent
-
-A complete production-style agent.
-
-Pipeline:
-
-```
-Incoming Email
-        │
-        ▼
- Structured Extraction
-        │
-        ▼
-Intent Classification
-        │
-        ▼
-Parallel Operations
- ├───────────────┐
- │               │
- ▼               ▼
-Database      Ticket System
-Lookup         Creation
- │               │
- └──────┬────────┘
-        ▼
- Draft Response
-        │
-        ▼
- Urgency Check
-        │
-   Critical?
-      │
- ┌────┴────┐
- │         │
- ▼         ▼
-Human     Send
-Review    Email
-```
-
-Features:
-
-- Structured Output with Pydantic
-- Gemini Integration
-- Context Retrieval
-- Parallel Processing
-- Dynamic Routing
-- Human Approval
-- Session Memory
-
-If:
-
-- urgency == `critical`
-
-or
-
-- intent == `complex`
-
-the graph automatically routes into a Human Review checkpoint before responding.
-
----
-
-# 🖼️ Output Graph Visualizations
-
-Every lab automatically exports a Mermaid-generated graph visualization.
-
-```
-output/
-│
-├── graph_viz_lab01.png
-├── graph_viz_lab02.png
-├── graph_viz_lab03a.png
-├── graph_viz_lab03b.png
-├── graph_viz_lab05.png
-└── graph_viz_lab06.png
-```
-
-These images provide a visual representation of each workflow's execution graph.
-
----
-
-# 📂 Project Structure
-
-```
+## 📂 Project Directory Structure
+```text
 langgraph-essentials-course/
 │
 ├── Lab01_States.py
@@ -347,131 +108,71 @@ langgraph-essentials-course/
 ├── requirements.txt
 ├── .env
 └── README.md
+
 ```
 
 ---
 
-# ⚙️ Local Installation
+## ⚙️ Quickstart: Local Installation & Setup
 
-Clone the repository
+Follow these step-by-step instructions to clone, configure, and execute this project locally on your machine.
+
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/langgraph-essentials-course.git
-
+git clone [https://github.com/YOUR_USERNAME/langgraph-essentials-course.git](https://github.com/YOUR_USERNAME/langgraph-essentials-course.git)
 cd langgraph-essentials-course
+
 ```
 
-Create a virtual environment
+### 2. Configure Environment and Virtual Environment
+
+Create a clean python virtual environment to safely isolate dependent libraries:
 
 ```bash
+# Create Environment
 python -m venv venv
-```
 
-Windows
-
-```bash
+# Activate Environment (Windows)
 .\venv\Scripts\activate
-```
 
-Mac / Linux
-
-```bash
+# Activate Environment (Mac / Linux)
 source venv/bin/activate
+
 ```
 
-Install dependencies
+### 3. Install Package Dependencies
+
+Install all required LangGraph, LangChain, and validation packages mapped inside the configuration manifest:
 
 ```bash
 pip install -r requirements.txt
+
 ```
 
----
+### 4. Setup Secret API Keys
 
-# 🔑 Environment Variables
-
-Create a `.env` file
+Create a new file named exactly `.env` in the root directory of the project, and add your API credentials:
 
 ```text
-GOOGLE_API_KEY=AIzaSyYourGeminiStudioKeyHere
+GOOGLE_API_KEY=AIzaSyYourActualGeminiStudioKeyHere
+OPENAI_API_KEY=sk-proj-YourActualOpenAIKeyHere
 
-OPENAI_API_KEY=sk-proj-YourOpenAIKeyHere
 ```
 
----
+*Note: Make sure `.env` is listed inside your `.gitignore` file to ensure security credentials are never pushed upstream.*
 
-# ▶️ Run Any Lab
+### 5. Running the Application Modules
 
-Example:
+You can run and test any isolated lab execution script directly from your terminal:
 
 ```bash
 python Lab01_States.py
-```
-
-or
-
-```bash
 python Lab02_Parallel.py
-```
-
-or
-
-```bash
 python Lab03a_Conditional.py
-```
-
-or
-
-```bash
 python Lab03b_Command.py
-```
-
-or
-
-```bash
 python Lab04_Memory.py
-```
-
-or
-
-```bash
 python Lab05_HITL.py
-```
-
-or
-
-```bash
 python Lab06_Email_Agent.py
+
 ```
-
----
-
-# 🎯 What This Repository Demonstrates
-
-By completing this course, I gained hands-on experience with:
-
-- LangGraph architecture
-- StateGraph fundamentals
-- TypedDict state design
-- Reducers
-- Parallel execution
-- Fan-Out / Fan-In workflows
-- Conditional routing
-- Dynamic Command routing
-- Conversation memory
-- Checkpointers
-- Human-In-The-Loop systems
-- Interrupt & Resume execution
-- Structured Outputs using Pydantic
-- Google Gemini integration
-- OpenAI integration
-- Enterprise agent workflows
-- Multi-step orchestration
-- Production-ready graph architectures
-
----
-
-# 📖 Summary
-
-This repository represents a complete implementation of the **LangGraph Essentials Course**, with every lab rewritten into clean, production-style Python scripts.
-
-Beyond reproducing the course material, the project emphasizes maintainable code structure, modern LangGraph patterns, practical LLM integrations, and real-world AI agent design principles. It serves as both a learning portfolio and a reference implementation for building stateful, reliable, and production-ready AI workflows using LangGraph.
